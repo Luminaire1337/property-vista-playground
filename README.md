@@ -9,7 +9,7 @@ A testing playground for my engineering thesis project exploring modern web deve
 ## Tech Stack
 
 - **Next.js 15** + App Router
-- **TypeScript** 
+- **TypeScript**
 - **Supabase** (Database + Auth)
 - **Tailwind CSS** + shadcn/ui
 - **Bun** runtime
@@ -18,7 +18,7 @@ A testing playground for my engineering thesis project exploring modern web deve
 
 - Daily rotating featured properties
 - User authentication (email + Google)
-- Property search and filtering  
+- Property search and filtering
 - Favorites system
 - Responsive design
 - Polish UI (mieszkanie, dom, etc.)
@@ -27,8 +27,8 @@ A testing playground for my engineering thesis project exploring modern web deve
 
 ```bash
 # Clone and install
-git clone <repo>
-cd property-vista2
+git clone https://github.com/Luminaire1337/property-vista-playground
+cd property-vista-playground
 bun install
 
 # Setup environment
@@ -44,4 +44,4 @@ bun run dev
 
 ---
 
-*This is a thesis research playground. Every line is vibecoded. Don't use it for anything important!*
+_This is a thesis research playground. Every line is vibecoded. Don't use it for anything important!_
