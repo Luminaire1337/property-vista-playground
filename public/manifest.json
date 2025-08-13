@@ -1,0 +1,72 @@
+{
+  "name": "PropertyVista - Platforma Nieruchomości",
+  "short_name": "PropertyVista",
+  "description": "Twoja zaufana platforma nieruchomości w Polsce. Znajdź swoje wymarzone mieszkanie, dom lub lokal.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#10b981",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "pl",
+  "categories": ["business", "lifestyle", "utilities"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "32x32",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "PropertyVista - Strona główna"
+    },
+    {
+      "src": "/screenshot-narrow.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "PropertyVista - Aplikacja mobilna"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Szukaj mieszkań",
+      "short_name": "Mieszkania",
+      "description": "Znajdź mieszkania na sprzedaż i wynajem",
+      "url": "/properties?type=mieszkanie",
+      "icons": [{ "src": "/icon-192.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "Szukaj domów",
+      "short_name": "Domy",
+      "description": "Znajdź domy na sprzedaż i wynajem",
+      "url": "/properties?type=dom",
+      "icons": [{ "src": "/icon-192.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "Moje ulubione",
+      "short_name": "Ulubione",
+      "description": "Zobacz swoje ulubione nieruchomości",
+      "url": "/favorites",
+      "icons": [{ "src": "/icon-192.svg", "sizes": "192x192" }]
+    }
+  ]
+}
