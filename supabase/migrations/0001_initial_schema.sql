@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 -- Create properties table
 CREATE TABLE IF NOT EXISTS public.properties (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  slug TEXT NOT NULL,
   title TEXT NOT NULL CHECK (length(title) >= 5 AND length(title) <= 200),
   description TEXT NOT NULL CHECK (length(description) >= 10 AND length(description) <= 5000),
   location TEXT NOT NULL CHECK (length(location) >= 3 AND length(location) <= 200),
@@ -45,8 +46,6 @@ CREATE TABLE IF NOT EXISTS public.properties (
   property_type property_type NOT NULL,
   transaction_type transaction_type NOT NULL,
   featured BOOLEAN DEFAULT FALSE,
-  rating DECIMAL(3,2) DEFAULT 0.0 CHECK (rating >= 0.0 AND rating <= 5.0),
-  reviews_count INTEGER DEFAULT 0 CHECK (reviews_count >= 0),
   user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
@@ -72,6 +71,7 @@ CREATE TABLE IF NOT EXISTS public.favorites (
 );
 
 -- Create indexes for better performance
+CREATE UNIQUE INDEX IF NOT EXISTS properties_slug_idx ON public.properties(slug);
 CREATE INDEX IF NOT EXISTS idx_properties_location ON public.properties(location);
 CREATE INDEX IF NOT EXISTS idx_properties_property_type ON public.properties(property_type);
 CREATE INDEX IF NOT EXISTS idx_properties_transaction_type ON public.properties(transaction_type);
@@ -92,7 +92,51 @@ BEGIN
   NEW.updated_at = NOW();
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+
+-- Create function to generate URL-friendly slugs from Polish text
+CREATE OR REPLACE FUNCTION public.generate_slug(input_text TEXT)
+RETURNS TEXT AS $$
+BEGIN
+  RETURN lower(
+    regexp_replace(
+      regexp_replace(
+        regexp_replace(
+          regexp_replace(
+            regexp_replace(
+              regexp_replace(
+                regexp_replace(
+                  regexp_replace(
+                    regexp_replace(input_text, 'ą', 'a', 'g'),
+                    'ć', 'c', 'g'),
+                  'ę', 'e', 'g'),
+                'ł', 'l', 'g'),
+              'ń', 'n', 'g'),
+            'ó', 'o', 'g'),
+          'ś', 's', 'g'),
+        'ź|ż', 'z', 'g'),
+      '[^a-z0-9\s-]', '', 'g')
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+
+-- Create function to auto-generate slug on insert/update
+CREATE OR REPLACE FUNCTION public.set_property_slug()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Only set slug if it's not provided or if title changed
+  IF NEW.slug IS NULL OR (TG_OP = 'UPDATE' AND OLD.title != NEW.title AND NEW.slug = OLD.slug) THEN
+    NEW.slug := public.generate_slug(
+      regexp_replace(
+        regexp_replace(NEW.title, '\s+', '-', 'g'),
+        '-+', '-', 'g'
+      )
+    ) || '-' || substring(NEW.id::text from 1 for 8);
+  END IF;
+  
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- Create triggers for updated_at
 CREATE TRIGGER profiles_updated_at
@@ -104,6 +148,12 @@ CREATE TRIGGER properties_updated_at
   BEFORE UPDATE ON public.properties
   FOR EACH ROW
   EXECUTE FUNCTION public.handle_updated_at();
+
+-- Create trigger to auto-generate slugs
+CREATE TRIGGER trigger_set_property_slug
+  BEFORE INSERT OR UPDATE ON public.properties
+  FOR EACH ROW
+  EXECUTE FUNCTION public.set_property_slug();
 
 -- Enable Row Level Security
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
@@ -169,7 +219,7 @@ BEGIN
   );
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- Trigger to create profile on user signup
 CREATE TRIGGER on_auth_user_created

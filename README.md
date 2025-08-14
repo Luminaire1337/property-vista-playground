@@ -35,12 +35,21 @@ bun install
 cp .env.example .env.local
 # Add your Supabase credentials
 
-# Run database schema
-# Copy supabase-schema.sql to your Supabase dashboard
+# Local Development with Supabase
+supabase start
+supabase db reset  # Applies schema and seed data
 
 # Start dev server
 bun run dev
 ```
+
+### 🧪 Test User (Local Development)
+
+For local testing, use these credentials:
+- **Email:** `test@propertyvistadev.com`
+- **Password:** `testpassword123`
+
+This test user is automatically created when you run `supabase db reset` and comes with sample property data.
 
 ---
 
