@@ -27,7 +27,7 @@ import {
   X
 } from 'lucide-react';
 import { Property } from '@/types/property';
-import { getPropertyBySlug, addToFavorites, removeFromFavorites, isPropertyFavorited, getProperties } from '@/lib/properties';
+import { getPropertyBySlug, addToFavorites, removeFromFavorites, isPropertyFavorited, getProperties, incrementPropertyViews } from '@/lib/properties';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface PropertyOwner {
@@ -39,8 +39,7 @@ interface PropertyOwner {
 }
 
 interface PropertyWithOwner extends Property {
-  owner: PropertyOwner;
-  views?: number;
+  owner: PropertyOwner | null;
 }
 
 export default function PropertyDetailsPage() {
@@ -89,21 +88,10 @@ export default function PropertyDetailsPage() {
         return;
       }
 
-      // For now, we'll use mock owner data since we don't have the profile join implemented
-      // TODO: Update getPropertyBySlug to include owner profile data
-      const mockOwner: PropertyOwner = {
-        id: 'mock-user-id',
-        full_name: 'Anna Kowalska',
-        phone: '+48 123 456 789',
-        email: 'anna.kowalska@example.com',
-        avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face'
-      };
+      // Increment view counter
+      await incrementPropertyViews(propertyData.id);
 
-      setProperty({
-        ...propertyData,
-        owner: mockOwner,
-        views: Math.floor(Math.random() * 500) + 100 // Mock view count
-      });
+      setProperty(propertyData as PropertyWithOwner);
 
       // Check if favorited
       if (user) {
@@ -261,14 +249,27 @@ export default function PropertyDetailsPage() {
             <div className="bg-white rounded-lg overflow-hidden shadow-sm">
               {property.images.length > 0 ? (
                 <div className="relative">
-                  <div className="aspect-[4/3] relative">
-                    <Image
-                      src={property.images[currentImageIndex]}
-                      alt={property.title}
-                      fill
-                      className="object-cover cursor-pointer"
-                      onClick={() => setShowImageModal(true)}
-                    />
+                  <div className="aspect-[4/3] relative overflow-hidden">
+                    <div 
+                      className="flex transition-transform duration-500 ease-in-out h-full"
+                      style={{ 
+                        transform: `translateX(-${currentImageIndex * 100}%)`,
+                        width: `${property.images.length * 100}%`
+                      }}
+                    >
+                      {property.images.map((image, index) => (
+                        <div key={index} className="relative flex-shrink-0 w-full h-full">
+                          <Image
+                            src={image}
+                            alt={`${property.title} - ${index + 1}`}
+                            fill
+                            className="object-cover cursor-pointer"
+                            onClick={() => setShowImageModal(true)}
+                            priority={index === 0}
+                          />
+                        </div>
+                      ))}
+                    </div>
                   </div>
                   
                   {property.images.length > 1 && (
@@ -310,15 +311,17 @@ export default function PropertyDetailsPage() {
                       <button
                         key={index}
                         onClick={() => setCurrentImageIndex(index)}
-                        className={`flex-shrink-0 w-20 h-16 relative rounded-md overflow-hidden border-2 ${
-                          index === currentImageIndex ? 'border-green-500' : 'border-transparent'
+                        className={`flex-shrink-0 w-24 h-16 relative rounded-md overflow-hidden border-2 transition-all duration-200 hover:scale-105 ${
+                          index === currentImageIndex ? 'border-green-500 shadow-md' : 'border-gray-200'
                         }`}
                       >
                         <Image
                           src={image}
                           alt={`${property.title} - ${index + 1}`}
-                          fill
-                          className="object-cover"
+                          width={96}
+                          height={72}
+                          className="w-full h-full object-cover rounded-sm"
+                          sizes="96px"
                         />
                       </button>
                     ))}
@@ -329,21 +332,21 @@ export default function PropertyDetailsPage() {
 
             {/* Property Title and Location */}
             <div className="bg-white rounded-lg p-6 shadow-sm">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-4">
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 break-words">
                     {property.title}
                   </h1>
                   <div className="flex items-center text-gray-600">
-                    <MapPin className="w-5 h-5 mr-2" />
-                    <span className="text-lg">{property.location}</span>
+                    <MapPin className="w-5 h-5 mr-2 flex-shrink-0" />
+                    <span className="text-lg break-words">{property.location}</span>
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="text-3xl font-bold text-green-600">
+                <div className="text-left lg:text-right flex-shrink-0">
+                  <div className="text-2xl md:text-3xl font-bold text-green-600 whitespace-nowrap">
                     {property.price.toLocaleString('pl-PL')} zł
                   </div>
-                  <div className="text-gray-500">
+                  <div className="text-gray-500 whitespace-nowrap">
                     {property.pricePerM2.toLocaleString('pl-PL')} zł/m²
                   </div>
                 </div>
@@ -406,65 +409,78 @@ export default function PropertyDetailsPage() {
             <div className="bg-white rounded-lg p-6 shadow-sm">
               <h3 className="text-lg font-semibold mb-4">Kontakt z właścicielem</h3>
               
-              <div className="flex items-center space-x-4 mb-6">
-                <div className="w-16 h-16 relative rounded-full overflow-hidden bg-gray-200">
-                  {property.owner.avatar_url ? (
-                    <Image
-                      src={property.owner.avatar_url}
-                      alt={property.owner.full_name}
-                      fill
-                      className="object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <User className="w-8 h-8 text-gray-400" />
+              {property.owner ? (
+                <>
+                  <div className="flex items-center space-x-4 mb-6">
+                    <div className="w-16 h-16 relative rounded-full overflow-hidden bg-gray-200">
+                      {property.owner.avatar_url ? (
+                        <Image
+                          src={property.owner.avatar_url}
+                          alt={property.owner.full_name}
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <User className="w-8 h-8 text-gray-400" />
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-                <div>
-                  <h4 className="font-medium text-gray-900">{property.owner.full_name}</h4>
-                  <p className="text-sm text-gray-500">Właściciel nieruchomości</p>
-                </div>
-              </div>
+                    <div>
+                      <h4 className="font-medium text-gray-900">{property.owner.full_name}</h4>
+                      <p className="text-sm text-gray-500">Właściciel nieruchomości</p>
+                    </div>
+                  </div>
 
-              <div className="space-y-3 mb-6">
-                <div className="flex items-center space-x-3">
-                  <Phone className="w-5 h-5 text-gray-500" />
-                  <a 
-                    href={`tel:${property.owner.phone}`}
-                    className="text-green-600 hover:text-green-700 font-medium"
-                  >
-                    {property.owner.phone}
-                  </a>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <Mail className="w-5 h-5 text-gray-500" />
-                  <a 
-                    href={`mailto:${property.owner.email}`}
-                    className="text-green-600 hover:text-green-700"
-                  >
-                    {property.owner.email}
-                  </a>
-                </div>
-              </div>
+                  <div className="space-y-3 mb-6">
+                    {property.owner.phone && (
+                      <div className="flex items-center space-x-3">
+                        <Phone className="w-5 h-5 text-gray-500" />
+                        <a 
+                          href={`tel:${property.owner.phone}`}
+                          className="text-green-600 hover:text-green-700 font-medium"
+                        >
+                          {property.owner.phone}
+                        </a>
+                      </div>
+                    )}
+                    <div className="flex items-center space-x-3">
+                      <Mail className="w-5 h-5 text-gray-500" />
+                      <a 
+                        href={`mailto:${property.owner.email}`}
+                        className="text-green-600 hover:text-green-700"
+                      >
+                        {property.owner.email}
+                      </a>
+                    </div>
+                  </div>
 
-              <div className="space-y-3">
-                <Button 
-                  className="w-full"
-                  onClick={() => window.open(`tel:${property.owner.phone}`)}
-                >
-                  <Phone className="w-4 h-4 mr-2" />
-                  Zadzwoń teraz
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => setShowContactForm(true)}
-                >
-                  <Mail className="w-4 h-4 mr-2" />
-                  Wyślij wiadomość
-                </Button>
-              </div>
+                  <div className="space-y-3">
+                    {property.owner.phone && (
+                      <Button 
+                        className="w-full"
+                        onClick={() => window.open(`tel:${property.owner?.phone}`)}
+                      >
+                        <Phone className="w-4 h-4 mr-2" />
+                        Zadzwoń teraz
+                      </Button>
+                    )}
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={() => setShowContactForm(true)}
+                    >
+                      <Mail className="w-4 h-4 mr-2" />
+                      Wyślij wiadomość
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-8">
+                  <User className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500">Informacje o właścicielu nie są dostępne</p>
+                </div>
+              )}
             </div>
 
             {/* Property Details */}
@@ -583,7 +599,7 @@ export default function PropertyDetailsPage() {
       {/* Contact Form Modal */}
       <ContactForm
         propertyTitle={property.title}
-        ownerName={property.owner.full_name}
+        ownerName={property.owner?.full_name || 'Właściciel'}
         isOpen={showContactForm}
         onClose={() => setShowContactForm(false)}
       />

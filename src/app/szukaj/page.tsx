@@ -29,16 +29,47 @@ function SearchPageContent() {
   const router = useRouter();
   const resultsPerPage = 12;
 
+  // Function to update URL parameters
+  const updateURLParams = useCallback((filters: PropertySearchFilters) => {
+    const params = new URLSearchParams();
+    
+    if (filters.transactionType) params.set('transactionType', filters.transactionType);
+    if (filters.location) params.set('location', filters.location);
+    if (filters.propertyType) params.set('propertyType', filters.propertyType);
+    if (filters.minPrice) params.set('minPrice', filters.minPrice.toString());
+    if (filters.maxPrice) params.set('maxPrice', filters.maxPrice.toString());
+    if (filters.minArea) params.set('minArea', filters.minArea.toString());
+    if (filters.maxArea) params.set('maxArea', filters.maxArea.toString());
+    if (filters.minRooms) params.set('minRooms', filters.minRooms.toString());
+    if (filters.parking !== undefined) params.set('parking', filters.parking.toString());
+
+    const newURL = params.toString() ? `?${params.toString()}` : '';
+    router.replace(`/szukaj${newURL}`, { scroll: false });
+  }, [router]);
+
+  // Handle filter changes (only update local state, no URL sync)
+  const handleFiltersChange = useCallback((filters: PropertySearchFilters) => {
+    setCurrentFilters(filters);
+  }, []);
+
   const handleSearch = useCallback(async (filters: PropertySearchFilters) => {
     setLoading(true);
     setError(null);
     setCurrentFilters(filters);
     setCurrentPage(1);
+    
+    // Update URL parameters when search is performed
+    updateURLParams(filters);
+    
+    // Clear previous results immediately when starting new search
+    setProperties([]);
+    setTotalResults(0);
+    setFavorites({});
 
     try {
       // Use the searchProperties function if there's a query, otherwise getProperties with filters
       let results: Property[];
-      if (filters.location) {
+      if (filters.location && filters.location.trim()) {
         results = await searchProperties(filters.location, {
           propertyType: filters.propertyType,
           transactionType: filters.transactionType,
@@ -53,7 +84,7 @@ function SearchPageContent() {
           transactionType: filters.transactionType,
           minPrice: filters.minPrice,
           maxPrice: filters.maxPrice,
-          location: filters.location,
+          location: undefined, // Explicitly set to undefined for general search
           rooms: filters.minRooms,
           limit: 100 // Get more results for client-side pagination
         });
@@ -75,9 +106,9 @@ function SearchPageContent() {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, updateURLParams]);
 
-  // Load search filters from URL on mount
+  // Load search filters from URL on mount and perform search if params exist
   useEffect(() => {
     const urlFilters: PropertySearchFilters = {
       transactionType: (searchParams.get('transactionType') as PropertySearchFilters['transactionType']) || 'sprzedaż',
@@ -93,8 +124,9 @@ function SearchPageContent() {
     
     setCurrentFilters(urlFilters);
     
-    // Perform initial search if there are filters from URL
-    if (Object.values(urlFilters).some(value => value !== undefined && value !== '')) {
+    // Perform search if there are URL parameters (from direct navigation or back button)
+    const hasUrlFilters = Object.values(urlFilters).some(value => value !== undefined && value !== '');
+    if (hasUrlFilters) {
       handleSearch(urlFilters);
     }
   }, [searchParams, handleSearch]);
@@ -160,6 +192,8 @@ function SearchPageContent() {
           <div className="max-w-4xl mx-auto">
             <SearchForm 
               onSearch={handleSearch}
+              onFiltersChange={handleFiltersChange}
+              initialFilters={currentFilters}
               className={`transition-all duration-300 ${!showFilters && 'mb-4'}`}
             />
           </div>

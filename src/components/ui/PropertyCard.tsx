@@ -67,8 +67,8 @@ export function PropertyCard({
           </div>
         )}
         {property.featured && !isDailyFeatured && (
-          <div className="absolute top-3 left-3 bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-medium">
-            Premium
+          <div className="absolute top-3 left-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-1 rounded-full text-xs font-medium shadow-lg">
+            ⭐ Wyróżnione
           </div>
         )}
         <div className="absolute top-3 right-3">

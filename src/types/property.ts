@@ -11,6 +11,7 @@ export interface Property {
   parking: number;
   images: string[];
   featured: boolean;
+  views: number;
   propertyType: PropertyType;
   transactionType: TransactionType;
   description: string;

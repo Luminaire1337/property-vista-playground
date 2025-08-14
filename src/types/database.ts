@@ -17,6 +17,7 @@ export interface Database {
           property_type: "mieszkanie" | "dom" | "lokal" | "działka" | "garaż";
           transaction_type: "sprzedaż" | "wynajem" | "kupno";
           featured: boolean;
+          views: number;
           user_id: string;
           created_at: string;
           updated_at: string;
@@ -36,6 +37,7 @@ export interface Database {
           property_type: "mieszkanie" | "dom" | "lokal" | "działka" | "garaż";
           transaction_type: "sprzedaż" | "wynajem" | "kupno";
           featured?: boolean;
+          views?: number;
           user_id: string;
           created_at?: string;
           updated_at?: string;
@@ -55,6 +57,7 @@ export interface Database {
           property_type?: "mieszkanie" | "dom" | "lokal" | "działka" | "garaż";
           transaction_type?: "sprzedaż" | "wynajem" | "kupno";
           featured?: boolean;
+          views?: number;
           user_id?: string;
           created_at?: string;
           updated_at?: string;

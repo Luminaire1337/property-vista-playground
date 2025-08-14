@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, MapPin, Building2 } from "lucide-react";
@@ -10,10 +10,12 @@ import { cn } from "@/lib/utils";
 
 interface SearchFormProps {
   onSearch: (filters: PropertySearchFilters) => void;
+  onFiltersChange?: (filters: PropertySearchFilters) => void;
+  initialFilters?: PropertySearchFilters;
   className?: string;
 }
 
-export function SearchForm({ onSearch, className }: SearchFormProps) {
+export function SearchForm({ onSearch, onFiltersChange, initialFilters, className }: SearchFormProps) {
   const [filters, setFilters] = useState<PropertySearchFilters>({
     transactionType: "sprzedaż",
     location: "",
@@ -26,14 +28,27 @@ export function SearchForm({ onSearch, className }: SearchFormProps) {
     parking: undefined,
   });
 
+  // Update filters when initialFilters change
+  useEffect(() => {
+    if (initialFilters) {
+      setFilters(initialFilters);
+    }
+  }, [initialFilters]);
+
   const handleInputChange = (
     field: keyof PropertySearchFilters,
     value: string | number | boolean | undefined
   ) => {
-    setFilters((prev) => ({
-      ...prev,
+    const updatedFilters = {
+      ...filters,
       [field]: value === "" ? undefined : value,
-    }));
+    };
+    setFilters(updatedFilters);
+    
+    // Only call onFiltersChange for local state updates (no URL sync)
+    if (onFiltersChange) {
+      onFiltersChange(updatedFilters);
+    }
   };
 
   const handleSearch = () => {

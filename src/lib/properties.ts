@@ -42,6 +42,7 @@ function convertToProperty(row: PropertyRow & { primary_image_url?: string; prim
     propertyType: row.property_type,
     transactionType: row.transaction_type,
     featured: row.featured,
+    views: row.views || 0,
     images: row.primary_image_url ? [row.primary_image_url] : [],
     features: [], // Add empty features array for now
     createdAt: new Date(row.created_at),
@@ -199,9 +200,10 @@ export async function isPropertyFeaturedToday(propertyId: string): Promise<boole
   return todaysFeatured.some(property => property.id === propertyId);
 }
 
-// Get property by slug
+// Get property by slug with owner information
 export async function getPropertyBySlug(slug: string) {
-  const { data, error } = await supabase
+  // First get the property
+  const { data: propertyData, error: propertyError } = await supabase
     .from('properties')
     .select(`
       *,
@@ -210,18 +212,62 @@ export async function getPropertyBySlug(slug: string) {
     .eq('slug', slug)
     .single();
 
-  if (error) {
-    console.error('Error fetching property by slug:', error);
-    throw error;
+  if (propertyError) {
+    console.error('Error fetching property by slug:', propertyError);
+    throw propertyError;
   }
 
-  if (!data) return null;
+  if (!propertyData) return null;
 
-  const property = convertToProperty(data);
+  // Get the owner contact info directly from profiles with proper RLS
+  console.log('Looking for owner with user_id:', propertyData.user_id);
+  
+  const { data: ownerData, error: ownerError } = await supabase
+    .from('profiles')
+    .select(`
+      id,
+      full_name,
+      phone,
+      email,
+      avatar_url
+    `)
+    .eq('id', propertyData.user_id)
+    .single();
+
+  console.log('Owner query result:', { ownerData, ownerError });
+
+  if (ownerError) {
+    console.error('Error fetching owner profile:', ownerError);
+    console.log('Property user_id:', propertyData.user_id);
+  }
+
+  const property = convertToProperty(propertyData);
   return {
     ...property,
-    images: data.property_images?.map((img: { url: string }) => img.url) || [],
+    images: propertyData.property_images?.map((img: { url: string }) => img.url) || [],
+    owner: ownerData ? {
+      id: ownerData.id,
+      full_name: ownerData.full_name,
+      phone: ownerData.phone,
+      email: ownerData.email,
+      avatar_url: ownerData.avatar_url,
+    } : null,
   };
+}
+
+// Increment property views counter
+export async function incrementPropertyViews(propertyId: string): Promise<number> {
+  const { data, error } = await supabase.rpc('increment_property_views', {
+    property_id: propertyId
+  });
+
+  if (error) {
+    console.error('Error incrementing property views:', error);
+    // Don't throw error, just return 0 as fallback
+    return 0;
+  }
+
+  return data || 0;
 }
 
 // Get property by ID (kept for backward compatibility)
