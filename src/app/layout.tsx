@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { CookieNotice } from "@/components/ui/CookieNotice";
 import { siteConfig } from "@/config/site";
 
 const inter = Inter({
@@ -158,7 +159,10 @@ export default function RootLayout({
         />
       </head>
       <body className="font-sans antialiased">
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          {children}
+          <CookieNotice />
+        </AuthProvider>
       </body>
     </html>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
   Menu,
@@ -35,34 +36,14 @@ export function Header() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
-            <div className="flex items-center space-x-2">
+            <Link href="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
               <Logo size={32} />
               <span className="text-xl font-bold text-gray-900">
                 {siteConfig.name}
               </span>
-            </div>
+            </Link>
 
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center space-x-8">
-              <a
-                href="#properties"
-                className="text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                Nieruchomości
-              </a>
-              <a
-                href="#about"
-                className="text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                O nas
-              </a>
-              <a
-                href="#contact"
-                className="text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                Kontakt
-              </a>
-            </nav>
+            {/* Desktop Navigation - Removed for cleaner UI */}
 
             {/* Desktop Actions */}
             <div className="hidden md:flex items-center space-x-4">
@@ -113,29 +94,8 @@ export function Header() {
           {isMenuOpen && (
             <div className="md:hidden py-4 border-t border-gray-100">
               <nav className="flex flex-col space-y-4">
-                <a
-                  href="#properties"
-                  className="text-gray-600 hover:text-gray-900 transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Nieruchomości
-                </a>
-                <a
-                  href="#about"
-                  className="text-gray-600 hover:text-gray-900 transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  O nas
-                </a>
-                <a
-                  href="#contact"
-                  className="text-gray-600 hover:text-gray-900 transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Kontakt
-                </a>
                 {user ? (
-                  <div className="pt-4 border-t border-gray-100">
+                  <div>
                     {loading && !profile ? (
                       <div className="w-32 h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
                     ) : (

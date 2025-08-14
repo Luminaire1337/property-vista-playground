@@ -1,5 +1,6 @@
 export interface Property {
   id: string;
+  slug: string;
   title: string;
   location: string;
   price: number;
@@ -9,8 +10,6 @@ export interface Property {
   bathrooms: number;
   parking: number;
   images: string[];
-  rating: number;
-  reviews: number;
   featured: boolean;
   propertyType: PropertyType;
   transactionType: TransactionType;

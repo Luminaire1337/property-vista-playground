@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from 'next/navigation';
 import { PropertyCard } from "@/components/ui/PropertyCard";
 import { Button } from "@/components/ui/button";
 import { getFeaturedProperties, addToFavorites, removeFromFavorites, getBatchFavoritesStatus } from "@/lib/properties";
@@ -13,6 +14,7 @@ export function FeaturedProperties() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     const loadFeaturedPropertiesAndFavorites = async () => {
@@ -61,14 +63,12 @@ export function FeaturedProperties() {
     }
   };
 
-  const handleViewDetails = () => {
-    // TODO: Navigate to property details page
-    // Implementation: Add router.push(`/properties/${property.id}`)
+  const handleViewDetails = (propertySlug: string) => {
+    router.push(`/nieruchomosci/${propertySlug}`);
   };
 
   const handleViewAll = () => {
-    // TODO: Navigate to all properties page
-    // Implementation: Add router.push('/properties')
+    router.push('/szukaj');
   };
 
   return (
@@ -117,7 +117,7 @@ export function FeaturedProperties() {
                 key={property.id}
                 property={property}
                 onFavorite={handleFavorite}
-                onViewDetails={() => handleViewDetails()}
+                onViewDetails={() => handleViewDetails(property.slug)}
                 isFavorited={favorites[property.id] || false}
                 isDailyFeatured={true} // All properties in this section are daily featured
               />

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Heart, MapPin, Bed, Bath, Car, Star, Eye } from "lucide-react";
+import { Heart, MapPin, Bed, Bath, Car, Eye } from "lucide-react";
 import { Property } from "@/types/property";
 import {
   formatPrice,
@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 interface PropertyCardProps {
   property: Property;
   onFavorite?: (propertyId: string) => void;
-  onViewDetails?: (propertyId: string) => void;
+  onViewDetails?: (propertySlug: string) => void;
   className?: string;
   isFavorited?: boolean; // Accept favorite status as prop to avoid individual API calls
   isDailyFeatured?: boolean; // Indicates if this property is featured today
@@ -46,7 +46,7 @@ export function PropertyCard({
   };
 
   const handleViewDetails = () => {
-    onViewDetails?.(property.id);
+    onViewDetails?.(property.slug);
   };
 
   return (
@@ -131,25 +131,6 @@ export function PropertyCard({
           <span className="font-medium">{formatArea(property.area)}</span>
         </div>
 
-        {/* Rating */}
-        <div className="flex items-center mb-3">
-          <div className="flex items-center">
-            {[...Array(5)].map((_, i) => (
-              <Star
-                key={i}
-                className={cn(
-                  "h-4 w-4",
-                  i < Math.floor(property.rating)
-                    ? "fill-yellow-400 text-yellow-400"
-                    : "text-gray-300"
-                )}
-              />
-            ))}
-          </div>
-          <span className="text-sm text-gray-600 ml-2">
-            {property.rating} ({property.reviews})
-          </span>
-        </div>
 
         {/* Price */}
         <div className="mb-3 mt-auto">

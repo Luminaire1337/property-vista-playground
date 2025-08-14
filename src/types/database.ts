@@ -4,6 +4,7 @@ export interface Database {
       properties: {
         Row: {
           id: string;
+          slug: string;
           title: string;
           description: string;
           location: string;
@@ -16,14 +17,13 @@ export interface Database {
           property_type: "mieszkanie" | "dom" | "lokal" | "działka" | "garaż";
           transaction_type: "sprzedaż" | "wynajem" | "kupno";
           featured: boolean;
-          rating: number;
-          reviews_count: number;
           user_id: string;
           created_at: string;
           updated_at: string;
         };
         Insert: {
           id?: string;
+          slug: string;
           title: string;
           description: string;
           location: string;
@@ -36,14 +36,13 @@ export interface Database {
           property_type: "mieszkanie" | "dom" | "lokal" | "działka" | "garaż";
           transaction_type: "sprzedaż" | "wynajem" | "kupno";
           featured?: boolean;
-          rating?: number;
-          reviews_count?: number;
           user_id: string;
           created_at?: string;
           updated_at?: string;
         };
         Update: {
           id?: string;
+          slug?: string;
           title?: string;
           description?: string;
           location?: string;
@@ -56,8 +55,6 @@ export interface Database {
           property_type?: "mieszkanie" | "dom" | "lokal" | "działka" | "garaż";
           transaction_type?: "sprzedaż" | "wynajem" | "kupno";
           featured?: boolean;
-          rating?: number;
-          reviews_count?: number;
           user_id?: string;
           created_at?: string;
           updated_at?: string;

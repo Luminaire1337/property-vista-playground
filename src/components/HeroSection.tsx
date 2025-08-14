@@ -1,12 +1,25 @@
 "use client";
 
+import { useRouter } from 'next/navigation';
 import { SearchForm } from "@/components/ui/SearchForm";
 import { siteConfig } from "@/config/site";
+import { PropertySearchFilters } from "@/types/property";
 
 export function HeroSection() {
-  const handleSearch = () => {
-    // TODO: Navigate to search results page with filters
-    // Implementation: Add router.push('/properties/search?...')
+  const router = useRouter();
+
+  const handleSearch = (filters: PropertySearchFilters) => {
+    // Build query string from filters
+    const params = new URLSearchParams();
+    
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== '') {
+        params.append(key, value.toString());
+      }
+    });
+
+    // Navigate to search page with filters
+    router.push(`/szukaj?${params.toString()}`);
   };
 
   return (
@@ -32,7 +45,7 @@ export function HeroSection() {
         </div>
 
         {/* Search Form */}
-        <SearchForm onSearch={() => handleSearch()} />
+        <SearchForm onSearch={handleSearch} />
 
         {/* Trust Indicators */}
         <div className="mt-12 flex flex-wrap justify-center items-center space-x-8 text-gray-500">

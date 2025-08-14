@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, MapPin, Building2, Bed, Bath, Car } from "lucide-react";
+import { Search, MapPin, Building2 } from "lucide-react";
 import { siteConfig } from "@/config/site";
 import { PropertySearchFilters } from "@/types/property";
 import { cn } from "@/lib/utils";
@@ -15,7 +15,7 @@ interface SearchFormProps {
 
 export function SearchForm({ onSearch, className }: SearchFormProps) {
   const [filters, setFilters] = useState<PropertySearchFilters>({
-    transactionType: "kupno",
+    transactionType: "sprzedaż",
     location: "",
     propertyType: undefined,
     minPrice: undefined,
@@ -212,22 +212,6 @@ export function SearchForm({ onSearch, className }: SearchFormProps) {
           <Search className="w-5 h-5 mr-2" />
           Szukaj nieruchomości
         </Button>
-      </div>
-
-      {/* Quick Stats */}
-      <div className="flex justify-center space-x-8 text-sm text-gray-600 mt-6">
-        <div className="flex items-center space-x-2">
-          <Bed className="w-4 h-4" />
-          <span>2+ pokoje</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Bath className="w-4 h-4" />
-          <span>2+ łazienki</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Car className="w-4 h-4" />
-          <span>Garaż</span>
-        </div>
       </div>
     </div>
   );

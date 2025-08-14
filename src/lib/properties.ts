@@ -6,10 +6,30 @@ type PropertyRow = Database['public']['Tables']['properties']['Row'];
 type PropertyInsert = Database['public']['Tables']['properties']['Insert'];
 type PropertyUpdate = Database['public']['Tables']['properties']['Update'];
 
+// Generate URL-friendly slug from title
+function generateSlug(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/ą/g, 'a')
+    .replace(/ć/g, 'c')
+    .replace(/ę/g, 'e')
+    .replace(/ł/g, 'l')
+    .replace(/ń/g, 'n')
+    .replace(/ó/g, 'o')
+    .replace(/ś/g, 's')
+    .replace(/ź/g, 'z')
+    .replace(/ż/g, 'z')
+    .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/-+/g, '-') // Replace multiple hyphens with single
+    .trim();
+}
+
 // Convert database row to Property type
 function convertToProperty(row: PropertyRow & { primary_image_url?: string; primary_image_alt?: string }): Property {
   return {
     id: row.id,
+    slug: row.slug || generateSlug(row.title),
     title: row.title,
     description: row.description,
     location: row.location,
@@ -22,8 +42,6 @@ function convertToProperty(row: PropertyRow & { primary_image_url?: string; prim
     propertyType: row.property_type,
     transactionType: row.transaction_type,
     featured: row.featured,
-    rating: row.rating,
-    reviews: row.reviews_count,
     images: row.primary_image_url ? [row.primary_image_url] : [],
     features: [], // Add empty features array for now
     createdAt: new Date(row.created_at),
@@ -181,7 +199,32 @@ export async function isPropertyFeaturedToday(propertyId: string): Promise<boole
   return todaysFeatured.some(property => property.id === propertyId);
 }
 
-// Get property by ID
+// Get property by slug
+export async function getPropertyBySlug(slug: string) {
+  const { data, error } = await supabase
+    .from('properties')
+    .select(`
+      *,
+      property_images(*)
+    `)
+    .eq('slug', slug)
+    .single();
+
+  if (error) {
+    console.error('Error fetching property by slug:', error);
+    throw error;
+  }
+
+  if (!data) return null;
+
+  const property = convertToProperty(data);
+  return {
+    ...property,
+    images: data.property_images?.map((img: { url: string }) => img.url) || [],
+  };
+}
+
+// Get property by ID (kept for backward compatibility)
 export async function getPropertyById(id: string) {
   const { data, error } = await supabase
     .from('properties')
